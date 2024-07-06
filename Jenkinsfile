@@ -25,6 +25,16 @@ pipeline {
             }
         }
 
+        stage('Buenas prácticas con Dockle') {
+            steps {
+                script {
+                    // Descargar la imagen de Alpine
+                    sh "dockle -f json -o resultados_dockle.json ${env.DOCKER}"
+                    sh "cat resultados_dockle.json"
+                }
+            }
+        }
+        
         stage('Analizar imagen con Trivy') {
             steps {
                 script {
