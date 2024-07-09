@@ -1,40 +1,17 @@
-# Stage 1: Build
-FROM alpine:latest AS build
+FROM jenkins/jenkins:lts
+USER root
+RUN apt-get update -qq \
+    && apt-get install -qqy wget apt-transport-https lsb-release ca-certificates curl gnupg2 software-properties-common
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+RUN add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/debian \
+   $(lsb_release -cs) \
+   stable"
+RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
+RUN echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | tee -a /etc/apt/sources.list.d/trivy.list
 
-# Install necessary packages
-RUN apk update && apk add --no-cache \
-    openjdk17 \
-    maven \
-    bash
+RUN apt-get update  -qq \
+    && apt-get -y install docker-ce trivy
+RUN usermod -aG docker jenkins
 
-WORKDIR /app
-
-# Copy the pom.xml and download dependencies
-# COPY pom.xml .
-# RUN mvn dependency:go-offline -B
-
-# Copy the source code and build the application
-# COPY src ./src
-# RUN mvn package -DskipTests
-
-# Stage 2: Run
-FROM alpine:latest
-
-# Install necessary packages
-RUN apk update && apk add --no-cache \
-    openjdk17-jre
-
-WORKDIR /app
-
-# Copy the JAR file from the build stage
-# COPY --from=build /app/target/*.jar app.jar
-
-# Create a user and group to run the application
-# RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
-# Expose the application port
-EXPOSE 8080
-
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# USER jenkins
