@@ -1,17 +1,35 @@
-FROM jenkins/jenkins:lts
-USER root
-RUN apt-get update -qq \
-    && apt-get install -qqy wget apt-transport-https lsb-release ca-certificates curl gnupg2 software-properties-common
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-RUN add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/debian \
-   $(lsb_release -cs) \
-   stable"
-RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
-RUN echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | tee -a /etc/apt/sources.list.d/trivy.list
+# Use the official Alpine image as the base image
+FROM alpine:latest
 
-RUN apt-get update  -qq \
-    && apt-get -y install docker-ce trivy
-RUN usermod -aG docker jenkins
+# Install necessary packages
+RUN apk update && \
+    apk add openjdk17-jre wget git bash && \
+    apk add --no-cache shadow && \
+    rm -rf /var/cache/apk/*
 
-# USER jenkins
+# Define Jenkins environment variables
+ENV JENKINS_HOME /var/jenkins_home
+ENV JENKINS_SLAVE_AGENT_PORT 50000
+ENV JENKINS_VERSION 2.467
+ENV JENKINS_SHA 965fdbf11e1735f18ee143ebb5b12a8c3055a725385311f5fd4c336c064bc346
+
+# Create Jenkins user and group
+RUN addgroup -S jenkins && adduser -S -G jenkins jenkins
+
+# Create Jenkins home directory
+RUN mkdir -p /usr/share/jenkins/ && \
+    mkdir -p $JENKINS_HOME && \
+    chown -R jenkins:jenkins $JENKINS_HOME
+
+# Download and install Jenkins
+RUN wget -q -O /usr/share/jenkins/jenkins.war http://mirrors.jenkins.io/war-stable/$JENKINS_VERSION/jenkins.war
+
+# Expose Jenkins ports
+EXPOSE 8080
+EXPOSE 50000
+
+# Switch to Jenkins user
+USER jenkins
+
+# Set up entrypoint and command
+ENTRYPOINT ["/usr/bin/java", "-jar", "/usr/share/jenkins/jenkins.war"]
