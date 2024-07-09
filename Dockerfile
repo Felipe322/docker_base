@@ -10,8 +10,8 @@ RUN apk update && \
 # Define Jenkins environment variables
 ENV JENKINS_HOME /var/jenkins_home
 ENV JENKINS_SLAVE_AGENT_PORT 50000
-ENV JENKINS_VERSION 2.467
-ENV JENKINS_SHA 965fdbf11e1735f18ee143ebb5b12a8c3055a725385311f5fd4c336c064bc346
+ENV JENKINS_VERSION 2.414.1
+ENV JENKINS_SHA 8e8d9b5b5b4f44e6bf6d71d78b3b1ec7c7bb10d13f77b54420f47a5a2d243fc7
 
 # Create Jenkins user and group
 RUN addgroup -S jenkins && adduser -S -G jenkins jenkins
